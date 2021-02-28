@@ -189,10 +189,13 @@ public class KThread {
 
 	Lib.assertTrue(toBeDestroyed == null);
 	toBeDestroyed = currentThread;
-
-
+         
 	currentThread.status = statusFinished;
 	
+ 	while(waitQueue != null){
+	
+	}
+
 	sleep();
     }
 
@@ -284,10 +287,13 @@ public class KThread {
     	    Lib.debug(dbgThread, "retured"+ toString();
 	}
 
-	boolean interrupt = 
+	boolean interrupt = Machine.interrupt().disable();
 	
 	sleep();
+
+	Machine.interrupt().restore(status);
     }
+    i
 
     /**
      * Create the idle thread. Whenever there are no threads ready to be run,
@@ -454,4 +460,6 @@ public class KThread {
     private static KThread currentThread = null;
     private static KThread toBeDestroyed = null;
     private static KThread idleThread = null;
+
+    private ThreadQueue waitQueue = ThreadedKernel.scheduler.newThreadQueue(false);
 }
