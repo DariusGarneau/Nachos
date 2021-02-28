@@ -1,6 +1,7 @@
 package nachos.threads;
 
 import nachos.machine.*;
+import java.util.LinkedList;
 
 /**
  * An implementation of condition variables that disables interrupt()s for
@@ -22,7 +23,7 @@ public class Condition2 {
 	 */
 	public Condition2(Lock conditionLock) {
 		this.conditionLock = conditionLock;
-		waitQueue = ThreadedKernel.scheduler.newThreadQueue(false); 
+		waitQueue = new LinkedList<KThread>();
 	}
 
 	/**
@@ -37,8 +38,7 @@ public class Condition2 {
 		boolean intStatus = Machine.interrupt().disable();
 
 		KThread t = KThread.currentThread();
-		waitQueue.waitForAccess(t);
-
+		waitQueue.add(t);
 		conditionLock.release();
 		KThread.sleep();
 		conditionLock.acquire();
@@ -50,9 +50,12 @@ public class Condition2 {
 	 * current thread must hold the associated lock.
 	 */
 	public void wake() {
-		Lib.assertTrue(conditionLock.isHeldByCurrentThread());
+		Lib.assertTrue(conditionLock.isHeldByCurrentThread(), "Lock not held...");
 		boolean intStatus = Machine.interrupt().disable();
-		waitQueue.nextThread().ready();	
+		if(waitQueue.size() != 0){
+			KThread t = waitQueue.removeFirst();
+			t.ready();
+		}
 		Machine.interrupt().restore(intStatus);
 	}
 
@@ -62,20 +65,25 @@ public class Condition2 {
 	 */
 	public void wakeAll() {
 		Lib.assertTrue(conditionLock.isHeldByCurrentThread());
-		while(waitQueue.nextThread() != null)
+		while(waitQueue.size() != 0)
 			wake();
 	}
 
 	public static void selfTest(){
-		System.out.println("From Condition2....");
+		System.out.println("---------CONDITION2 TEST CASES----------");
+		Lock lock = new Lock();
+		Condition2 cTest = new Condition2(lock);
 
-		System.out.println("Test Case 1: The lock is not present on the thread.");
-
-		Condition2 cTest = new Condition2(new Lock());
-
+		new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Test Case 1: The lock is not present on the thread.");
+				lock.acquire();
+				cTest.sleep();
+			}
+		}).fork();
 
 	}
 
 	private Lock conditionLock;
-	private ThreadQueue waitQueue = null;
+	private LinkedList<KThread> waitQueue = null;
 }
