@@ -1,6 +1,6 @@
 package nachos.threads;
 
-import nachos.machine.*;
+import nacihos.machine.*;
 
 /**
  * A KThread is a thread that can be used to execute Nachos kernel code. Nachos
@@ -29,8 +29,7 @@ import nachos.machine.*;
  */
 public class KThread {
     /**
-     * Get the current thread.
-     *
+     * Get the current h
      * @return	the current thread.
      */
     public static KThread currentThread() {
@@ -275,8 +274,19 @@ public class KThread {
     public void join() {
 	Lib.debug(dbgThread, "Joining to thread: " + toString());
 
-	Lib.assertTrue(this != currentThread); //Test Darius Garneau
+	Lib.assertTrue(this != currentThread);
+	
+	//My code starts here -DG
+	if(status == statusFinished){
+	    Lib.debug(dbgThread, "Thread already finished" + toString();
+	}
+	else if(this == currentThread){
+    	    Lib.debug(dbgThread, "retured"+ toString();
+	}
 
+	boolean interrupt = 
+	
+	sleep();
     }
 
     /**
