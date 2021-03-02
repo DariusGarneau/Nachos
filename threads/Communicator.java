@@ -9,11 +9,22 @@ import nachos.machine.*;
  * be a time when both a speaker and a listener are waiting, because the two
  * threads can be paired off at this point.
  */
+
+Lock lock;
+Condition2 speakerCondition;
+Condition2 listenerCondition;
+int word;
+boolean received = false;
+int listeners = 0;
+
 public class Communicator {
     /**
      * Allocate a new communicator.
      */
     public Communicator() {
+        lock = new lock();
+        speakerCondition = new Condition2(lock);
+        listenerCondition = new Condition2(lock);
     }
 
     /**
@@ -27,6 +38,19 @@ public class Communicator {
      * @param	word	the integer to transfer.
      */
     public void speak(int word) {
+        lock.acquire();
+
+        while(listeners == 0 || word == null){
+            speakerCondition.sleep();
+        }
+
+        this.word = word;
+
+        received = true;
+
+        listenerCondition.wake();
+
+        lock.release();
     }
 
     /**
@@ -36,6 +60,24 @@ public class Communicator {
      * @return	the integer transferred.
      */    
     public int listen() {
-	return 0;
+        lock.acquire();
+
+        listeners++;
+
+        speakerCondition.wake();
+
+        listenerCondition.sleep();
+
+        listeners--;
+
+        int transfer = word; 
+
+        received = true;
+
+        speaker.wake();
+
+        lock.release();
+         
+	return word;
     }
 }
