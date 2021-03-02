@@ -78,7 +78,7 @@ public class Condition2 {
 		//***************TEST CASE 1**********************
 		KThread test1 = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("\n\nTest Case 1: The lock is not present on the thread.");
+				System.out.println("\nTest Case 1: The lock is not present on the thread.");
 				lock.acquire();
 				lock.release();
 				System.out.println("Attempting to sleep without lock...");
@@ -155,7 +155,7 @@ public class Condition2 {
 					System.out.println("Status of thread " + test4a.toString() + " is blocked.");	
 				if(cTest.getQueueSize() > 0){
 					System.out.println("Waking next thread on queue.");
-					cTest.wakeAll();
+					cTest.wake();
 				}
 				if(test4a.getStatus() == 1)//status ready
 					System.out.println("Test 4 Successful! Thread " + test4a.toString() + " is awake.\n");
@@ -166,6 +166,58 @@ public class Condition2 {
 		test4b.fork();
 		test4b.join();
 		test4a.join();
+
+
+		//***************TEST CASE 5**********************	
+		
+
+		//***************TEST CASE 6**********************
+		//Put two threads to sleep and use a third to wake them
+		KThread test6a = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Test Case 6: The thread is added to the queue.");
+				lock.acquire();
+				cTest.sleep();
+				lock.release();
+			}
+		});
+
+		test6a.setName("Test6a");
+		test6a.fork();
+
+		KThread test6b = new KThread(new Runnable(){
+			public void run(){
+				lock.acquire();
+				cTest.sleep();
+				lock.release();
+			}
+		});
+
+		test6b.setName("Test6b");
+		test6b.fork();
+
+		KThread test6c = new KThread(new Runnable(){
+			public void run(){
+				lock.acquire();
+				if(test6a.getStatus() == 3 && test6b.getStatus() == 3)
+					System.out.println("Status of threads " + test6a.toString() + " and " + test6b.toString() +  " is blocked.");	
+				if(cTest.getQueueSize() > 0){
+					System.out.println("Waking threads.");
+					cTest.wakeAll();
+				}
+				if(test6a.getStatus() == 1 && test6b.getStatus() == 1)//status ready
+					System.out.println("Test 6 Successful! Threads " + test6a.toString() + " and " +  test6b.toString() + " are awake.\n");
+				lock.release();
+			}
+		});
+
+		test6c.fork();
+		test6c.join();
+		test6a.join();
+		test6b.join();
+		
+
+
 	}
 
 	private int getQueueSize(){
