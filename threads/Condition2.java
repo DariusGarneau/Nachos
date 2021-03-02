@@ -36,28 +36,41 @@ public class Condition2 {
 		//Lib.assertTrue(conditionLock.isHeldByCurrentThread())
 		if(conditionLock.isHeldByCurrentThread()){
 			boolean intStatus = Machine.interrupt().disable();
-			conditionLock.release();
 			KThread t = KThread.currentThread();
 			waitQueue.add(t);
+			conditionLock.release();
 			KThread.sleep();
 			conditionLock.acquire();
 			Machine.interrupt().restore(intStatus);
 		}
-		}
+	}
 
 	/**
 	 * Wake up at most one thread sleeping on this condition variable. The
 	 * current thread must hold the associated lock.
+	 * boolean debug: used for test cases
 	 */
-	public void wake() {
+	private void wake(boolean debug) {
 		Lib.assertTrue(conditionLock.isHeldByCurrentThread(), "Lock not held...");
 		boolean intStatus = Machine.interrupt().disable();
+		if(debug && Machine.interrupt().disabled()){
+			System.out.println("Interrupts are disabled, waking next thread.");
+		}
 		if(waitQueue.size() != 0){
 			KThread t = waitQueue.removeFirst();
 			t.ready();
+			if(debug && t.getStatus() == 1)
+				wakeTestFlag = true;
 		}
+
 		Machine.interrupt().restore(intStatus);
 	}
+
+	public void wake(){
+		wake(false);
+	}
+
+
 
 	/**
 	 * Wake up all threads sleeping on this condition variable. The current
@@ -115,6 +128,8 @@ public class Condition2 {
 				lock.acquire();
 				if(cTest.getQueueSize() > 0)
 					System.out.println("Test 2 Successful! Sleeping Thread was added to the queue.\n");
+				else
+					System.out.println("Test 2 failed. Thread was not added to the queue.");
 
 				cTest.wakeAll();
 				lock.release();
@@ -128,18 +143,43 @@ public class Condition2 {
 
 
 		//***************TEST CASE 3**********************
-		KThread test3 = new KThread(new Runnable(){
+		KThread test3a = new KThread(new Runnable(){
 			public void run(){
-				
+				lock.acquire();
+				System.out.println("Test Case 3: The thread is added to the queue.");
+				cTest.sleep();
+				lock.release();
 			}
 		});
 
+		test3a.setName("Test 3");
+		test3a.fork();
+
+		KThread test3b = new KThread(new Runnable(){
+			public void run(){
+				lock.acquire();	
+				if(test3a.getStatus() == 3){//first thread asleep
+					System.out.println("Thread " + test3a.toString() + " is sleeping.");
+					cTest.wake(true);
+					if(!Machine.interrupt().disabled()  && wakeTestFlag)
+						System.out.println("Test 3 Successful! Interrupts are enabled & thread has woken up.\n");
+					else
+						System.out.println("Test 3 Failed.");
+
+				}
+				lock.release();
+			}
+		});
+
+		test3b.fork();
+		test3b.join();
+		test3a.join();
 
 		//***************TEST CASE 4**********************
 		KThread test4a = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 4: The thread is added to the queue.");
 				lock.acquire();
+				System.out.println("Test Case 4: The thread is added to the queue.");
 				cTest.sleep();
 				lock.release();
 			}
@@ -159,6 +199,8 @@ public class Condition2 {
 				}
 				if(test4a.getStatus() == 1)//status ready
 					System.out.println("Test 4 Successful! Thread " + test4a.toString() + " is awake.\n");
+				else
+					System.out.println("Test 4 Failed. Thread did not wake up.");
 				lock.release();
 			}
 		});
@@ -169,21 +211,18 @@ public class Condition2 {
 
 
 		//***************TEST CASE 5**********************	
-		
+
 
 		//***************TEST CASE 6**********************
 		//Put two threads to sleep and use a third to wake them
 		KThread test6a = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 6: The thread is added to the queue.");
 				lock.acquire();
+				System.out.println("Test Case 6: The thread is added to the queue.");
 				cTest.sleep();
 				lock.release();
 			}
 		});
-
-		test6a.setName("Test6a");
-		test6a.fork();
 
 		KThread test6b = new KThread(new Runnable(){
 			public void run(){
@@ -193,37 +232,46 @@ public class Condition2 {
 			}
 		});
 
+		KThread.yield();
 		test6b.setName("Test6b");
 		test6b.fork();
+		test6a.setName("Test6a");
+		test6a.fork();           		
 
 		KThread test6c = new KThread(new Runnable(){
 			public void run(){
 				lock.acquire();
-				if(test6a.getStatus() == 3 && test6b.getStatus() == 3)
+				System.out.println("Queue Size: " + cTest.getQueueSize());
+				if(test6a.getStatus() == 3 && test6b.getStatus() == 3){
 					System.out.println("Status of threads " + test6a.toString() + " and " + test6b.toString() +  " is blocked.");	
-				if(cTest.getQueueSize() > 0){
-					System.out.println("Waking threads.");
-					cTest.wakeAll();
+					if(cTest.getQueueSize() > 0){
+						System.out.println("Waking threads.");
+						cTest.wakeAll();
+					}
+					if(test6a.getStatus() == 1 && test6b.getStatus() == 1)//status ready
+						System.out.println("Test 6 Successful! Threads " + test6a.toString() + " and " +  test6b.toString() + " are awake.\n");
+
+				}else{
+					System.out.println("Test 6 Failed.");
+					System.out.println("Queue Size: " + cTest.getQueueSize());
 				}
-				if(test6a.getStatus() == 1 && test6b.getStatus() == 1)//status ready
-					System.out.println("Test 6 Successful! Threads " + test6a.toString() + " and " +  test6b.toString() + " are awake.\n");
 				lock.release();
 			}
 		});
-
+			
+		test6c.setName("Test6c");
 		test6c.fork();
 		test6c.join();
-		test6a.join();
 		test6b.join();
-		
-
+		test6a.join();
 
 	}
 
+	//Return the size of the waitQueue
 	private int getQueueSize(){
 		return waitQueue.size();
 	}
-
+	private static boolean wakeTestFlag = false;
 	private Lock conditionLock;
 	private LinkedList<KThread> waitQueue = null;
-	}
+}
