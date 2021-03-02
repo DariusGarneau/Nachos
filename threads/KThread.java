@@ -1,6 +1,6 @@
 package nachos.threads;
 
-import nachos.machine.*;
+import nacihos.machine.*;
 
 /**
  * A KThread is a thread that can be used to execute Nachos kernel code. Nachos
@@ -29,8 +29,7 @@ import nachos.machine.*;
  */
 public class KThread {
     /**
-     * Get the current thread.
-     *
+     * Get the current h
      * @return	the current thread.
      */
     public static KThread currentThread() {
@@ -190,10 +189,13 @@ public class KThread {
 
 	Lib.assertTrue(toBeDestroyed == null);
 	toBeDestroyed = currentThread;
-
-
+         
 	currentThread.status = statusFinished;
 	
+ 	while(waitQueue != null){
+	
+	}
+
 	sleep();
     }
 
@@ -276,8 +278,22 @@ public class KThread {
 	Lib.debug(dbgThread, "Joining to thread: " + toString());
 
 	Lib.assertTrue(this != currentThread);
+	
+	//My code starts here -DG
+	if(status == statusFinished){
+	    Lib.debug(dbgThread, "Thread already finished" + toString();
+	}
+	else if(this == currentThread){
+    	    Lib.debug(dbgThread, "retured"+ toString();
+	}
 
+	boolean interrupt = Machine.interrupt().disable();
+	
+	sleep();
+
+	Machine.interrupt().restore(status);
     }
+    i
 
     /**
      * Create the idle thread. Whenever there are no threads ready to be run,
@@ -444,4 +460,6 @@ public class KThread {
     private static KThread currentThread = null;
     private static KThread toBeDestroyed = null;
     private static KThread idleThread = null;
+
+    private ThreadQueue waitQueue = ThreadedKernel.scheduler.newThreadQueue(false);
 }

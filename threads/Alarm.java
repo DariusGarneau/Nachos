@@ -14,6 +14,10 @@ public class Alarm {
      * <p><b>Note</b>: Nachos will not function correctly with more than one
      * alarm.
      */
+
+    LinkedList<long> wakeTimes;
+    LinkedList<KThread> waitQueue;
+
     public Alarm() {
 	Machine.timer().setInterruptHandler(new Runnable() {
 		public void run() { timerInterrupt(); }
@@ -28,6 +32,12 @@ public class Alarm {
      */
     public void timerInterrupt() {
 	KThread.currentThread().yield();
+
+	for(int i = 0; i < waitQueue.size(); ++i){
+	    if(){
+
+	    }	
+	}
     }
 
     /**
