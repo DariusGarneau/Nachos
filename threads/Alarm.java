@@ -32,14 +32,14 @@ public class Alarm {
      */
     public void timerInterrupt() {
 	KThread.currentThread().yield();
-
+/*
 	for(int i = 0; i < waitQueue.size(); ++i){
 	    if(){
 
 	    }	
 	}
     }
-
+*/
     /**
      * Put the current thread to sleep for at least <i>x</i> ticks,
      * waking it up in the timer interrupt handler. The thread must be

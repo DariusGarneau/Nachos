@@ -1,6 +1,7 @@
 package nachos.threads;
 
 import nachos.machine.*;
+import java.util.LinkedList;
 
 /**
  * A KThread is a thread that can be used to execute Nachos kernel code. Nachos
@@ -192,11 +193,8 @@ public class KThread {
          
 	currentThread.status = statusFinished;
 	
- 	while(waitQueue != null){
-	
-	}
-
 	sleep();
+
     }
 
     /**
@@ -280,24 +278,26 @@ public class KThread {
 	Lib.assertTrue(this != currentThread);
 	
 	//My code starts here -DG
-	if(status == statusFinished){
-	    Lib.debug(dbgThread, "Thread already finished" + toString();
+	if(status == statusFinished || this == currentThread){
+	    Lib.debug(dbgThread, "Thread already finished or current" + toString());
 	    return;
 	}
-	else if(this == currentThread){
-    	    Lib.debug(dbgThread, "return"+ toString();
-            return;
-	}
 
+    Lib.debug(dbgThread, "Success! Joining Thread!" + toString());
+
+    this.joinList.add(currentThread.id);
+
+	for(int i = 0; i < currentThread.joinList.size(); i++){
+		this.joinList.add(currentThread.joinList.get(i));
+	}
+    
 	boolean interrupt = Machine.interrupt().disable();
 	
 	KThread.sleep();
 
-    currentThread.waitQueue();
+    saveState();
 
-    KThread,saveState();
-
-	Machine.interrupt().restore(status);
+	Machine.interrupt().restore(interrupt);
     }
 
     /**
@@ -467,4 +467,5 @@ public class KThread {
     private static KThread idleThread = null;
 
     private ThreadQueue waitQueue = ThreadedKernel.scheduler.newThreadQueue(false);
+    private LinkedList<Integer> joinList = new LinkedList<Integer>();
 }
