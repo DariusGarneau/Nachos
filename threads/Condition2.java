@@ -74,14 +74,37 @@ public class Condition2 {
 		Lock lock = new Lock();
 		Condition2 cTest = new Condition2(lock);
 
-		new KThread(new Runnable(){
+		KThread test1 = new KThread(new Runnable(){
 			public void run(){
+				//program crashes here, error is expected but program should continue
 				System.out.println("Test Case 1: The lock is not present on the thread.");
-				lock.acquire();
+				lock.release();
 				cTest.sleep();
 			}
-		}).fork();
+		});
+//
+//		test1.setName("Condition2 test 1");
+//		test1.fork();
+//		test1.join();
+//
 
+		KThread test2 = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Test Case 2: The thread is added to the queue.");
+				System.out.println("Current queue size: " + cTest.getQueueSize() + "\nAcquiring lock and putting thread to sleep...");
+				lock.acquire();
+				cTest.sleep();
+				System.out.println("Thread asleep. Queue size: " + cTest.getQueueSize() + "\n");
+				lock.release();
+			}
+		});
+		test2.setName("Condition2 test 2");
+		test2.fork();
+		test2.join();
+	}
+
+	public int getQueueSize(){
+		return waitQueue.size();
 	}
 
 	private Lock conditionLock;
