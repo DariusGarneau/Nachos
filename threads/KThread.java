@@ -293,6 +293,10 @@ public class KThread {
 	
 	KThread.sleep();
 
+    currentThread.waitQueue();
+
+    KThread,saveState();
+
 	Machine.interrupt().restore(status);
     }
 
