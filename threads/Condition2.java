@@ -61,6 +61,8 @@ public class Condition2 {
 			t.ready();
 			if(debug && t.getStatus() == 1)
 				wakeTestFlag = true;
+			else
+				wakeTestFlag = false;
 		}
 
 		Machine.interrupt().restore(intStatus);
@@ -76,10 +78,14 @@ public class Condition2 {
 	 * Wake up all threads sleeping on this condition variable. The current
 	 * thread must hold the associated lock.
 	 */
-	public void wakeAll() {
+	private void wakeAll(boolean debug) {
 		Lib.assertTrue(conditionLock.isHeldByCurrentThread());
 		while(waitQueue.size() != 0)
-			wake();
+			wake(debug);
+	}
+
+	public void wakeAll(){
+		wakeAll(false);
 	}
 
 	public static void selfTest(){
@@ -211,7 +217,50 @@ public class Condition2 {
 
 
 		//***************TEST CASE 5**********************	
+		//Put two threads to sleep and wake with wakeAll. Ensure interrupts are disabled and restored.
+		KThread test5a = new KThread(new Runnable(){
+			public void run(){
+				lock.acquire();
+				System.out.println("Test Case 5: The thread is added to the queue.");
+				cTest.sleep();
+				lock.release();
+			}
+		});
 
+		KThread test5b = new KThread(new Runnable(){
+			public void run(){
+				lock.acquire();
+				cTest.sleep();
+				lock.release();
+			}
+		});
+
+		KThread.yield();
+		test5a.setName("Test 5a");
+		test5a.fork();
+		test5b.setName("Test 5b");
+		test5b.fork();
+
+		KThread test5c = new KThread(new Runnable(){
+			public void run(){
+				lock.acquire();
+				if(test5a.getStatus() == 3 && test5b.getStatus() == 3){//threads asleep
+					System.out.println("Threads " + test5a.toString() +  " and " + test5b.toString() + " are sleeping.");
+					cTest.wakeAll(true);
+					if(!Machine.interrupt().disabled()  && wakeTestFlag)
+						System.out.println("Test 5 Successful! Interrupts are enabled & threads have woken up.\n");
+					else
+						System.out.println("Test 5 Failed.");
+
+				}
+				lock.release();
+			}
+		});
+
+		test5c.fork();
+		test5c.join();
+		test5a.join();
+		test5b.join();
 
 		//***************TEST CASE 6**********************
 		//Put two threads to sleep and use a third to wake them
@@ -258,7 +307,7 @@ public class Condition2 {
 				lock.release();
 			}
 		});
-			
+
 		test6c.setName("Test6c");
 		test6c.fork();
 		test6c.join();
