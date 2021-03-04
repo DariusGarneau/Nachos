@@ -20,21 +20,29 @@ public class ReactWater{
 		oCount = 0;
 	} //end of constructor
 
-	/**
+/**
 	 * When H element comes, if there already exist another H element and an O element,
 	 * then call makeWater()
 	 * or let H element wait in line
 	 */
 	public void hReady(){
-		lock.acquire();
-		++hCount;
+        	lock.acquire();
+        	++hCount;
+			Lib.debug(ReactTestChar, "hCount = " + hCount + " oCount = " + oCount);
 
-		while(oCount < 1 && hCount < 2)
-			hCondition.sleep();
-
+        	if(oCount < 1 || hCount < 2){
+        		hCondition.sleep();
+        	}else{
+		
 		hCondition.wake();
+		oCondition.wake();
 		makeWater();
 		lock.release();
+		return;
+		}
+
+        	lock.release();
+
 	}// end of hReady()
 
 	/**
@@ -43,16 +51,24 @@ public class ReactWater{
 	 * or let O element wait in line
 	 */
 	public void oReady(){
-		lock.acquire();
-		++oCount;
+        	lock.acquire();
+        	++oCount;
+		Lib.debug(ReactTestChar, "oCount = " + oCount + " hCount = " + hCount );
 
-		while(oCount < 1 && hCount < 2)
+		if(hCount <  2){
 			oCondition.sleep();
+		}else{
 
-		oCondition.wake();
+		hCondition.wake();
+		hCondition.wake();
 		makeWater();
 		lock.release();
+		return;
+		}
+
+		lock.release();
 	}//end of oReady()
+
 
 	/**
 	 * Print out the message "Water was made!" when water is made.
@@ -61,7 +77,16 @@ public class ReactWater{
 		hCount -= 2;
 		--oCount;
 		Lib.debug(ReactTestChar, "Water was made!");
+
 	}//end of makeWater()
+
+	/*
+	 * Used for testing purposes to reset the counts between tests
+	 */
+	private void reset(){
+		hCount = 0;
+		oCount = 0;
+	}
 
 	/**
 	 * Self testing method for the class ReactWater()
@@ -166,14 +191,15 @@ public class ReactWater{
 		h5.fork();
 
 		o1.fork();
-
 		o1.join();
+
 
 
 		//Test Case 3: 2h multiple (more than2)o
 		Lib.debug(ReactTestChar, "\nTestCase3: Abundance of Oxygen\nSuccessful if one water is made.");
 
 		//initalise
+		motherNature.reset();
 		o1 = new KThread();
 		o2 = new KThread();
 		o3 = new KThread();
@@ -225,7 +251,8 @@ public class ReactWater{
 				motherNature.oReady();
 			}
 		});
-
+	
+		
 		h1.fork();
 		h2.fork();
 
@@ -238,10 +265,12 @@ public class ReactWater{
 		o1.join();
 
 
+
 		//Test Case 4: many of both o and h
-		Lib.debug(ReactTestChar, "\nTestCase4: Abundacne of both\nSuccessful if two waters are made.");
+		Lib.debug(ReactTestChar, "\nTestCase4: Abundance of both\nSuccessful if two waters are made.");
 
 		//initalise
+		motherNature.reset();
 		h1 = new KThread();
 		h2 = new KThread();
 		h3 = new KThread();
@@ -329,6 +358,10 @@ public class ReactWater{
 		h5.fork();
 
 		o1.join();
+		o2.join();
+		o3.join();
+		o4.join();
+		o5.join();
 
 
 	}// end of selfTest()
