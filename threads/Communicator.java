@@ -16,6 +16,7 @@ public class Communicator {
 	private int word;
 	private boolean received = false;
 	private int listeners = 0;
+	private static final char CommunicatorTestChar = 'c';
 
 
 	/**
@@ -87,15 +88,15 @@ public class Communicator {
 	}
 
 	public static void selfTest(){
-		System.out.println("------------COMMUNICATOR TEST CASES---------------");
+		Lib.debug(CommunicatorTestChar, "------------COMMUNICATOR TEST CASES---------------");
 
 		Communicator cTest = new Communicator();
 
 		//***************Test Case 1*******************
 		KThread test1a = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 1: One Speaker and Listener.");
-				System.out.println("Sending message 123...");
+				Lib.debug(CommunicatorTestChar, "Test Case 1: One Speaker and Listener.");
+				Lib.debug(CommunicatorTestChar, "Sending message 123...");
 				cTest.speak(123);
 			}
 		});
@@ -105,11 +106,11 @@ public class Communicator {
 		KThread test1b = new KThread(new Runnable(){
 			public void run(){
 				int result = cTest.listen();
-				System.out.println(result);
+				Lib.debug(CommunicatorTestChar, "" + result);
 				if(result == 123)
-					System.out.println("Test 1 Successful! Message " + result + " received.\n");
+					Lib.debug(CommunicatorTestChar, "Test 1 Successful! Message " + result + " received.\n");
 				else
-					System.out.println("Test 1 Failed.\n");
+					Lib.debug(CommunicatorTestChar, "Test 1 Failed.\n");
 			}
 		});
 
@@ -129,7 +130,7 @@ public class Communicator {
 
 		KThread test2a = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 2: Multiple Speakers.\nSending message '1'");
+				Lib.debug(CommunicatorTestChar, "Test Case 2: Multiple Speakers.\nSending message '1'");
 				speakers[0].speak(1);
 			}
 		});
@@ -138,7 +139,7 @@ public class Communicator {
 
 		KThread test2b = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Sending message '2'");
+				Lib.debug(CommunicatorTestChar, "Sending message '2'");
 				speakers[1].speak(2);
 			}
 		});
@@ -147,7 +148,7 @@ public class Communicator {
 
 		KThread test2c = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Sending message '3'");
+				Lib.debug(CommunicatorTestChar, "Sending message '3'");
 				speakers[2].speak(3);
 			}
 		});
@@ -156,7 +157,7 @@ public class Communicator {
 
 		KThread test2d = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Listening for messages.");
+				Lib.debug(CommunicatorTestChar, "Listening for messages.");
 				for(int i = 0; i < 3; i++){
 					int result = speakers[i].listen();
 					if(result == i+1)
@@ -164,9 +165,9 @@ public class Communicator {
 				}
 				//check if each message was received
 				if(check[0] && check[1] && check[2])
-					System.out.println("Test 2 Successful! Each message was received by the listener.\n");
+					Lib.debug(CommunicatorTestChar, "Test 2 Successful! Each message was received by the listener.\n");
 				else
-					System.out.println("Test 2 Failed.");
+					Lib.debug(CommunicatorTestChar, "Test 2 Failed.");
 			}
 		});
 
@@ -180,18 +181,19 @@ public class Communicator {
 		//***************Test Case 3*******************
 		KThread test3a = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 3: Multiple Listeners.\nSending message 1011...");
+				Lib.debug(CommunicatorTestChar, "Test Case 3: Multiple Listeners.\nSending message 1011...");
 				cTest.speak(1011);
 			}
 		});
 
+		KThread.yield();
 		test3a.fork();
 
 		KThread test3b = new KThread(new Runnable(){
 			public void run(){
 				int result1 = cTest.listen();
 				if(result1 == 1011)
-					System.out.println("Message " + result1 + " received.\nTrying another listener...");
+					Lib.debug(CommunicatorTestChar, "Message " + result1 + " received.\nTrying another listener...");
 				int result2 = cTest.listen();
 			}
 		});
@@ -201,7 +203,7 @@ public class Communicator {
 		KThread test3c = new KThread(new Runnable(){
 			public void run(){
 				cTest.terminate();
-				System.out.println("Test 3 Successful! Second listener terminated since it had no message to receive.\n");
+				Lib.debug(CommunicatorTestChar, "Test 3 Successful! Second listener terminated since it had no message to receive.\n");
 			}
 		});
 
@@ -219,7 +221,7 @@ public class Communicator {
 
 		KThread test4a = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 4: Multiple Speakers and Listeners.\nSending message '1'");
+				Lib.debug(CommunicatorTestChar, "Test Case 4: Multiple Speakers and Listeners.\nSending message '1'");
 				speakers[0].speak(1);
 			}
 		});
@@ -228,7 +230,7 @@ public class Communicator {
 
 		KThread test4b = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Sending message '2'");
+				Lib.debug(CommunicatorTestChar, "Sending message '2'");
 				speakers[1].speak(2);
 			}
 		});
@@ -237,7 +239,7 @@ public class Communicator {
 
 		KThread test4c = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Sending message '3'");
+				Lib.debug(CommunicatorTestChar, "Sending message '3'");
 				speakers[2].speak(3);
 			}
 		});
@@ -246,14 +248,14 @@ public class Communicator {
 
 		KThread test4d = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Listening for messages.");
+				Lib.debug(CommunicatorTestChar, "Listening for messages.");
 				int result1 = speakers[0].listen();
 				int result2 = speakers[1].listen();
 				int result3 = speakers[2].listen();
 				if(result1 == 1 && result2 == 2 && result3 == 3)
-					System.out.println("Test 4 Successful! Each message was received by a separate listener.\n");
+					Lib.debug(CommunicatorTestChar, "Test 4 Successful! Each message was received by a separate listener.\n");
 				else
-					System.out.println("Test 4 Failed.");
+					Lib.debug(CommunicatorTestChar, "Test 4 Failed.");
 			}
 		});
 

@@ -286,7 +286,7 @@ public class KThread {
 		else{
 			//stop program from crashing when testing self join
 			if(debug && this == currentThread){
-				System.out.println("Self join blocked.");
+				Lib.debug(KThreadTestChar, "Self join blocked.");
 			}else{
 			Lib.assertTrue(this != currentThread);
 			Lib.debug(dbgThread, "Joining to thread: " + toString());
@@ -303,7 +303,7 @@ public class KThread {
 			if(debug){
 				if(test2 != null){
 					if(test2.getStatus() == 3)
-						System.out.println("Thread joined from is sleeping.");
+						Lib.debug(KThreadTestChar, "Thread joined from is sleeping.");
 				}
 				else
 					test2 = currentThread;
@@ -447,7 +447,7 @@ public class KThread {
 	 */
 	public static void selfTest() {
 		Lib.debug(dbgThread, "Enter KThread.selfTest");
-		System.out.println("*****************From KThread***************************");	
+		Lib.debug(KThreadTestChar, "*****************From KThread***************************");	
 		new KThread(new PingTest(1)).setName("forked thread").fork();
 		new PingTest(0).run();
 
@@ -456,10 +456,10 @@ public class KThread {
 		//****************Test Case 1******************************
 		//Join two running threads
 		
-		System.out.println("Task 1 Test Cases\n");
+		Lib.debug(KThreadTestChar, "Task 1 Test Cases\n");
 		KThread test1a = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 1: Join two running threads.\nFirst thread executing.");
+				Lib.debug(KThreadTestChar, "Test Case 1: Join two running threads.\nFirst thread executing.");
 			}	
 		});
 
@@ -467,13 +467,13 @@ public class KThread {
 
 		KThread test1b = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Second thread executing");
+				Lib.debug(KThreadTestChar, "Second thread executing");
 			}	
 		});
 
 		test1b.fork();
 		
-		System.out.println("Joining Threads...");
+		Lib.debug(KThreadTestChar, "Joining Threads...");
 		test1a.join();
 		test1b.join();
 
@@ -481,9 +481,9 @@ public class KThread {
 		KThread test1c = new KThread(new Runnable(){
 			public void run(){
 				if(test1a.getStatus() == 4 && test1b.getStatus() == 4)//both threads have joined
-					System.out.println("Test 1 Successful! Both threads joined successfully.\n");
+					Lib.debug(KThreadTestChar, "Test 1 Successful! Both threads joined successfully.\n");
 				else
-					System.out.println("Test 1 failed.");
+					Lib.debug(KThreadTestChar, "Test 1 failed.");
 			}	
 		});
 
@@ -497,18 +497,18 @@ public class KThread {
 		KThread test2b = new KThread();
 		test2a.setTarget(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 2: Join one thread that is currently running.\nThread executing.");
+				Lib.debug(KThreadTestChar, "Test Case 2: Join one thread that is currently running.\nThread executing.");
 				test2b.setTarget(new Runnable(){
 					public void run(){
 					}
 				});
 
-				System.out.println("Thread executing within first thread.");
+				Lib.debug(KThreadTestChar, "Thread executing within first thread.");
 				test2b.fork();
-				System.out.println("Sub thread joining.");
+				Lib.debug(KThreadTestChar, "Sub thread joining.");
 				test2b.join(true);
 
-				System.out.println("Test Case 2 Successful! Threads joined successfully.\n");
+				Lib.debug(KThreadTestChar, "Test Case 2 Successful! Threads joined successfully.\n");
 			}
 		});
 		test2a.fork();
@@ -518,9 +518,9 @@ public class KThread {
 		KThread test3a = new KThread();	
 		test3a.setTarget(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 3: Joining Thread to Self.\nThread executing...\nAttempting self join...");
+				Lib.debug(KThreadTestChar, "Test Case 3: Joining Thread to Self.\nThread executing...\nAttempting self join...");
 				test3a.join(true);
-				System.out.println("Test Case 3 Successful!\n");
+				Lib.debug(KThreadTestChar, "Test Case 3 Successful!\n");
 			}
 		});
 
@@ -530,7 +530,7 @@ public class KThread {
 		//****************Test Case 4******************************
 		KThread test4a = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Test Case 4: Joining Finished Thread.\nThread executing...");
+				Lib.debug(KThreadTestChar, "Test Case 4: Joining Finished Thread.\nThread executing...");
 			}
 		});
 	
@@ -541,9 +541,9 @@ public class KThread {
 		KThread test4b = new KThread(new Runnable(){
 			public void run(){
 				if(test4a.getStatus() == 4){
-					System.out.println("Thread already finished...\nAttempting to join finished thread...");
+					Lib.debug(KThreadTestChar, "Thread already finished...\nAttempting to join finished thread...");
 					test4a.join();
-					System.out.println("Test 4 Successful! Joined attempt returned.\n");
+					Lib.debug(KThreadTestChar, "Test 4 Successful! Joined attempt returned.\n");
 				}
 			}
 		});

@@ -13,6 +13,7 @@ public class Alarm {
 	// que for sleeping threads
 	private PriorityQueue<SleepingThread> waitQueue = null;
 	private static ArrayList<Long> order = new ArrayList<Long>();//used for test cases to verify threads woke in the correct order
+	private static final char AlarmTestChar = 'a';
 
 	/**
 	 * Allocate a new Alarm. Set the machine's timer interrupt handler to this
@@ -42,7 +43,7 @@ public class Alarm {
 		for (int i=0; i < waitQueue.size(); ++i) {
 			SleepingThread s = waitQueue.peek();
 			if (Machine.timer().getTime() >= + s.wakeTime){
-				System.out.println("Waking Thread " + s.thread.toString());
+				Lib.debug(AlarmTestChar, "Waking Thread " + s.thread.toString());
 				order.add(s.wakeTime);//for test cases
 				//yield the current thread
 				KThread.yield();
@@ -53,7 +54,7 @@ public class Alarm {
 				//remove thread from list
 				waitQueue.poll();
 			}else {
-				System.out.println("No more threads ready to wake up. Test 3 Successful!");
+				Lib.debug(AlarmTestChar, "No more threads ready to wake up. Test 3 Successful!");
 				//everthing in queue doesnt need to be woken up
 				i = waitQueue.size();
 			}
@@ -132,7 +133,7 @@ public class Alarm {
 
 	public static void selfTest() {
 
-		System.out.println("\n******* Alarm selfTest() Starting *******\n\nCreating alarm and test Threads");
+		Lib.debug(AlarmTestChar, "\n******* Alarm selfTest() Starting *******\n\nCreating alarm and test Threads");
 
 		Alarm alarm = new Alarm();
 		KThread threadA = null;
@@ -141,24 +142,24 @@ public class Alarm {
 		KThread threadD = null;
 
 		// Test Case 1: Put to sleep in order------------------------------------
-		System.out.println("Test Case 1: Put to sleep in order.\nExecuting Threads...");
+		Lib.debug(AlarmTestChar, "Test Case 1: Put to sleep in order.\nExecuting Threads...");
 		threadA = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Thread A sleeping for 1000");
+				Lib.debug(AlarmTestChar, "Thread A sleeping for 1000");
 				alarm.waitUntil(1000);
 			}
 		});
 
 		threadB = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Thread B sleeping for 2000");
+				Lib.debug(AlarmTestChar, "Thread B sleeping for 2000");
 				alarm.waitUntil(2000);
 			}
 		});
 
 		threadC = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Thread C sleeping for 3000");
+				Lib.debug(AlarmTestChar, "Thread C sleeping for 3000");
 				alarm.waitUntil(3000);
 			}
 		});
@@ -178,9 +179,9 @@ public class Alarm {
 
 		threadD = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Verifying threads woke in order...");
+				Lib.debug(AlarmTestChar, "Verifying threads woke in order...");
 				if(order.get(0) < order.get(1) && order.get(1) < order.get(2))
-					System.out.println("Test 1 Successful! Threads work up in the correct order.\n");
+					Lib.debug(AlarmTestChar, "Test 1 Successful! Threads work up in the correct order.\n");
 				order.clear();//clear order
 			}
 		});
@@ -191,24 +192,24 @@ public class Alarm {
 
 		// Test Case 2: Put to sleep in a mixed order----------------------------
 
-		System.out.println("Test Case 2: Put to sleep in mixed order.\nExecuting Threads...");
+		Lib.debug(AlarmTestChar, "Test Case 2: Put to sleep in mixed order.\nExecuting Threads...");
 		threadA = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Thread A sleeping for 3000");
+				Lib.debug(AlarmTestChar, "Thread A sleeping for 3000");
 				alarm.waitUntil(3000);
 			}
 		});
 
 		threadB = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Thread B sleeping for 1000");
+				Lib.debug(AlarmTestChar, "Thread B sleeping for 1000");
 				alarm.waitUntil(1000);
 			}
 		});
 
 		threadC = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Thread C sleeping for 2000");
+				Lib.debug(AlarmTestChar, "Thread C sleeping for 2000");
 				alarm.waitUntil(2000);
 			}
 		});
@@ -228,24 +229,34 @@ public class Alarm {
 
 		threadD = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Verifying threads woke in order..." + order.size());
-				alarm.waitUntil(5000);//this thread should wait to make sure the test threads are all awake
+				Lib.debug(AlarmTestChar, "Verifying threads woke in order..." + order.size());
+				alarm.waitUntil(3000);//this thread should wait to make sure the test threads are all awake
 				if(order.get(0) < order.get(1) && order.get(1) < order.get(2))
-					System.out.println("Test 2 Successful! Threads work up in the correct order.");
+					Lib.debug(AlarmTestChar, "Test 2 Successful! Threads work up in the correct order.");
 			}
 		});
 
+		threadD.setName("Thread D");
 		threadD.fork();
 		threadD.join();
 
 
 		// Test Case 3: Check that timerInterrupt() terminates properly
 		// 	(terminates instead of looping through the rest of the waiting threads
-		System.out.println("\nTest Case 3: Check that timerInterrupt() loop terminates properly.\nRun previous test with tracer code.");
+		Lib.debug(AlarmTestChar, "\nTest Case 3: Check that timerInterrupt() loop terminates properly.\nRun previous test with tracer code.");
 
 
 		// Test Case 4: Check wait times and threads sorted properly 
-		System.out.println("\nTest Case 4: Check that the wait times and threads are being sorted correctly.\nRun previous test with tracer code.\n");
+		Lib.debug(AlarmTestChar, "\nTest Case 4: Check that the wait times and threads are being sorted correctly.\nRun previous test with tracer code.\n");
+
+		KThread finish = new KThread(new Runnable(){
+			public void run(){
+
+			}
+		});
+
+		finish.fork();
+		finish.join();
 	}	
 
 }
