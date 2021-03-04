@@ -37,24 +37,15 @@ public class Alarm {
 	 */
 	public void timerInterrupt() {
 
-//		System.out.println("Start of timerInterrupt()");
-
-		// Yeild the current thread !!!!!!!!!!!!!!!!!!!!!! in the design doc we had this here
-		// but shouldnt it be in the for loop? or after a check to see if a switch is needed?
-
-		//KThread.yield();
-
 		//store and disable interrupts
 		boolean iStatus = Machine.interrupt().disable();
 		for (int i=0; i < waitQueue.size(); ++i) {
-		//	System.out.println("in timerInt for loop " + i);
-
 			SleepingThread s = waitQueue.peek();
 			if (Machine.timer().getTime() >= + s.wakeTime){
 				System.out.println("Waking Thread " + s.thread.toString());
-				order.add(s.wakeTime);
-				//yeild the current thread
-				KThread.currentThread().yield();
+				order.add(s.wakeTime);//for test cases
+				//yield the current thread
+				KThread.yield();
 
 				//put thread (in waitQueue) into readyState
 				s.thread.ready();
@@ -62,7 +53,7 @@ public class Alarm {
 				//remove thread from list
 				waitQueue.poll();
 			}else {
-			//	System.out.println("in timerInt else");
+				System.out.println("No more threads ready to wake up. Test 3 Successful!");
 				//everthing in queue doesnt need to be woken up
 				i = waitQueue.size();
 			}
@@ -136,8 +127,6 @@ public class Alarm {
 
 	/**
 	 *  SelfTest method
-	 *  TO-DO: complete it
-	 *  	   replace print staments with debug stuff
 	 *  
 	 */
 
@@ -198,7 +187,7 @@ public class Alarm {
 
 		threadD.fork();
 		threadD.join();
-		
+
 
 		// Test Case 2: Put to sleep in a mixed order----------------------------
 
@@ -240,6 +229,7 @@ public class Alarm {
 		threadD = new KThread(new Runnable(){
 			public void run(){
 				System.out.println("Verifying threads woke in order..." + order.size());
+				alarm.waitUntil(5000);//this thread should wait to make sure the test threads are all awake
 				if(order.get(0) < order.get(1) && order.get(1) < order.get(2))
 					System.out.println("Test 2 Successful! Threads work up in the correct order.");
 			}
@@ -248,50 +238,16 @@ public class Alarm {
 		threadD.fork();
 		threadD.join();
 
-//		Sleeper s1 = new Sleeper(10000);
-//		KThread test1a = new KThread(s1);
-//
-//		Sleeper s2 = new Sleeper(20000);
-//		KThread test1b = new KThread(s2);
-//
-//		test1a.fork();
-//		test1b.fork();
-//
-//		test1a.join();
-//		test1b.join();
-		// Test Case 2: Put to sleep in a mixed order----------------------------
-
-
 
 		// Test Case 3: Check that timerInterrupt() terminates properly
 		// 	(terminates instead of looping through the rest of the waiting threads
+		System.out.println("\nTest Case 3: Check that timerInterrupt() loop terminates properly.\nRun previous test with tracer code.");
 
 
-		// Test Case 4: tba
+		// Test Case 4: Check wait times and threads sorted properly 
+		System.out.println("\nTest Case 4: Check that the wait times and threads are being sorted correctly.\nRun previous test with tracer code.\n");
 	}	
 
-	//	protected static class Sleeper implements Runnable {
-	//
-	//		private long time;
-	//	//	Alarm alarm = null;
-	//
-	//		public Sleeper(long time){
-	//			this.time = time;
-	//	//`		alarm = new Alarm();
-	//		}
-	//
-	//		@Override
-	//		public void run() {
-	//			System.out.println("Inside testThread");
-	//			alarm.waitUntil(time);	
-	//		}
-	//
-	//		public void test(){
-	//			System.out.println("testing...");
-	//		}
-	//	}	
-	//
-	//
 }
 
 
