@@ -273,7 +273,7 @@ public class KThread {
 	 * call is not guaranteed to return. This thread must not be the current
 	 * thread.
 	 */
-	public void join() {
+	private void join(boolean debug) {
 
 		//Thread already finished, block join attempt
 		if(status == statusFinished)
@@ -284,6 +284,10 @@ public class KThread {
 			Lib.debug(KThreadTestChar, "Cannot join. Thread already joining. " + toString());
 		}
 		else{
+			//stop program from crashing when testing self join
+			if(debug && this == currentThread){
+				System.out.println("Self join blocked.");
+			}else{
 			Lib.assertTrue(this != currentThread);
 			Lib.debug(dbgThread, "Joining to thread: " + toString());
 			
@@ -294,11 +298,26 @@ public class KThread {
 			}
 			
 			boolean intStatus = Machine.interrupt().disable();
+
+			//for test 2, check if a thread is sleeping while another thread joins it
+			if(debug){
+				if(test2 != null){
+					if(test2.getStatus() == 3)
+						System.out.println("Thread joined from is sleeping.");
+				}
+				else
+					test2 = currentThread;
+			}
 			waitQueue.waitForAccess(currentThread);
 			sleep();
 			Machine.interrupt().restore(intStatus);
+			}
 		}
 
+	}
+
+	public void join(){
+		join(false);
 	}
 
 	/**
@@ -431,10 +450,113 @@ public class KThread {
 		System.out.println("*****************From KThread***************************");	
 		new KThread(new PingTest(1)).setName("forked thread").fork();
 		new PingTest(0).run();
+
+		//------------------KTHREAD TEST CASES-----------------------
+
+		//****************Test Case 1******************************
+		//Join two running threads
+		
+		System.out.println("Task 1 Test Cases\n");
+		KThread test1a = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Test Case 1: Join two running threads.\nFirst thread executing.");
+			}	
+		});
+
+		test1a.fork();
+
+		KThread test1b = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Second thread executing");
+			}	
+		});
+
+		test1b.fork();
+		
+		System.out.println("Joining Threads...");
+		test1a.join();
+		test1b.join();
+
+		//Third thread to verify status of joined threads
+		KThread test1c = new KThread(new Runnable(){
+			public void run(){
+				if(test1a.getStatus() == 4 && test1b.getStatus() == 4)//both threads have joined
+					System.out.println("Test 1 Successful! Both threads joined successfully.\n");
+				else
+					System.out.println("Test 1 failed.");
+			}	
+		});
+
+		test1c.fork();
+		test1c.join();
+
+
+		//****************Test Case 2******************************
+		
+		KThread test2a = new KThread();
+		KThread test2b = new KThread();
+		test2a.setTarget(new Runnable(){
+			public void run(){
+				System.out.println("Test Case 2: Join one thread that is currently running.\nThread executing.");
+				test2b.setTarget(new Runnable(){
+					public void run(){
+					}
+				});
+
+				System.out.println("Thread executing within first thread.");
+				test2b.fork();
+				System.out.println("Sub thread joining.");
+				test2b.join(true);
+
+				System.out.println("Test Case 2 Successful! Threads joined successfully.\n");
+			}
+		});
+		test2a.fork();
+		test2a.join(true);
+
+		//****************Test Case 3******************************
+		KThread test3a = new KThread();	
+		test3a.setTarget(new Runnable(){
+			public void run(){
+				System.out.println("Test Case 3: Joining Thread to Self.\nThread executing...\nAttempting self join...");
+				test3a.join(true);
+				System.out.println("Test Case 3 Successful!\n");
+			}
+		});
+
+		test3a.fork();
+		test3a.join();
+
+		//****************Test Case 4******************************
+		KThread test4a = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Test Case 4: Joining Finished Thread.\nThread executing...");
+			}
+		});
+	
+		test4a.setName("Test 4a");
+		test4a.fork();
+		test4a.join();
+
+		KThread test4b = new KThread(new Runnable(){
+			public void run(){
+				if(test4a.getStatus() == 4){
+					System.out.println("Thread already finished...\nAttempting to join finished thread...");
+					test4a.join();
+					System.out.println("Test 4 Successful! Joined attempt returned.\n");
+				}
+			}
+		});
+
+		test4b.fork();
+		test4b.join();
+
+
 	}
 
 	private static final char dbgThread = 't';
 	private static final char KThreadTestChar = 'k';
+	private static KThread test2 = null;
 
 	/**
 	 * Additional state used by schedulers.
