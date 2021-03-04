@@ -46,7 +46,7 @@ public class Communicator {
 		}
 		this.word = word;
 		received = true;
-		listenerCondition.wakeAll();
+		listenerCondition.wake();
 		lock.release();
 	}
 
@@ -59,8 +59,10 @@ public class Communicator {
 	public int listen() {
 		lock.acquire();
 		listeners++;
+		speakerCondition.wake();
+		listenerCondition.sleep();
 		while(!received){
-			speakerCondition.wakeAll();
+			speakerCondition.wake();
 			listenerCondition.sleep();
 		}
 		listeners--;
@@ -69,6 +71,19 @@ public class Communicator {
 		speakerCondition.wake();
 		lock.release();
 		return word;
+	}
+
+	//terminates a sleeping thread, used for test case 3
+	private void terminate(){
+		lock.acquire();
+		received = true;
+		listenerCondition.wake();
+		lock.release();
+	}
+
+
+	public int getListeners(){
+		return listeners;
 	}
 
 	public static void selfTest(){
@@ -163,7 +178,90 @@ public class Communicator {
 
 
 		//***************Test Case 3*******************
-		
+		KThread test3a = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Test Case 3: Multiple Listeners.\nSending message 1011...");
+				cTest.speak(1011);
+			}
+		});
+
+		test3a.fork();
+
+		KThread test3b = new KThread(new Runnable(){
+			public void run(){
+				int result1 = cTest.listen();
+				if(result1 == 1011)
+					System.out.println("Message " + result1 + " received.\nTrying another listener...");
+				int result2 = cTest.listen();
+			}
+		});
+
+		//since there is only one message, the second listener will sleep indefinitely
+		//this thread kills the second listener so the thread can join
+		KThread test3c = new KThread(new Runnable(){
+			public void run(){
+				cTest.terminate();
+				System.out.println("Test 3 Successful! Second listener terminated since it had no message to receive.\n");
+			}
+		});
+
+		test3b.fork();
+		test3a.join();
+		test3c.fork();
+		test3c.join();
+		test3b.join();
+
+
+		//***************Test Case 4*******************	
+
+		for(int i = 0; i < speakers.length; i++)
+			speakers[i] = new Communicator();
+
+		KThread test4a = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Test Case 4: Multiple Speakers and Listeners.\nSending message '1'");
+				speakers[0].speak(1);
+			}
+		});
+
+		test4a.fork();
+
+		KThread test4b = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Sending message '2'");
+				speakers[1].speak(2);
+			}
+		});
+
+		test4b.fork();
+
+		KThread test4c = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Sending message '3'");
+				speakers[2].speak(3);
+			}
+		});
+
+		test4c.fork();
+
+		KThread test4d = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Listening for messages.");
+				int result1 = speakers[0].listen();
+				int result2 = speakers[1].listen();
+				int result3 = speakers[2].listen();
+				if(result1 == 1 && result2 == 2 && result3 == 3)
+					System.out.println("Test 4 Successful! Each message was received by a separate listener.\n");
+				else
+					System.out.println("Test 4 Failed.");
+			}
+		});
+
+		test4d.fork();
+		test4d.join();
+		test4a.join();
+		test4b.join();
+		test4c.join();
 
 	}
 }
