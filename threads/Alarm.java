@@ -50,7 +50,7 @@ public class Alarm {
 		//	System.out.println("in timerInt for loop " + i);
 
 			SleepingThread s = waitQueue.peek();
-			if (Machine.timer().getTime() >= s.wakeTime){
+			if (Machine.timer().getTime() >= + s.wakeTime){
 				System.out.println("Waking Thread " + s.thread.toString());
 				order.add(s.wakeTime);
 				//yeild the current thread
@@ -169,7 +169,7 @@ public class Alarm {
 
 		threadC = new KThread(new Runnable(){
 			public void run(){
-				System.out.println("Thread B sleeping for 2000");
+				System.out.println("Thread C sleeping for 3000");
 				alarm.waitUntil(3000);
 			}
 		});
@@ -191,7 +191,57 @@ public class Alarm {
 			public void run(){
 				System.out.println("Verifying threads woke in order...");
 				if(order.get(0) < order.get(1) && order.get(1) < order.get(2))
-					System.out.println("Test 1 Successful! Threads work up in the correct order.");
+					System.out.println("Test 1 Successful! Threads work up in the correct order.\n");
+				order.clear();//clear order
+			}
+		});
+
+		threadD.fork();
+		threadD.join();
+		
+
+		// Test Case 2: Put to sleep in a mixed order----------------------------
+
+		System.out.println("Test Case 2: Put to sleep in mixed order.\nExecuting Threads...");
+		threadA = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Thread A sleeping for 3000");
+				alarm.waitUntil(3000);
+			}
+		});
+
+		threadB = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Thread B sleeping for 1000");
+				alarm.waitUntil(1000);
+			}
+		});
+
+		threadC = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Thread C sleeping for 2000");
+				alarm.waitUntil(2000);
+			}
+		});
+
+		threadA.setName("Thread A");
+		threadA.fork();
+
+		threadB.setName("Thread B");
+		threadB.fork();
+
+		threadC.setName("Thread C");
+		threadC.fork();
+
+		threadA.join();
+		threadB.join();
+		threadC.join();
+
+		threadD = new KThread(new Runnable(){
+			public void run(){
+				System.out.println("Verifying threads woke in order..." + order.size());
+				if(order.get(0) < order.get(1) && order.get(1) < order.get(2))
+					System.out.println("Test 2 Successful! Threads work up in the correct order.");
 			}
 		});
 
