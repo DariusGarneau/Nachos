@@ -442,14 +442,8 @@ public class KThread {
 
 		selfJoinThread.setTarget(new Runnable() {
 			public void run() {
-				String result = "Self join test failed.";
-				try {
-					selfJoinThread.join();
-				}
-				catch (Error e) {
-					result = "Self join test, passed.";
-				}
-				System.out.println(result);
+				selfJoinThread.join();
+				System.out.println("The thread didn't time out, therefore the self-join test has passed.");
 			}
 		});
 		selfJoinThread.fork();
@@ -470,53 +464,42 @@ public class KThread {
 		KThread test1a = new KThread(new Runnable(){
 			public void run(){
 				Lib.debug(KThreadTestChar, "Test Case 1: Join two running threads.\nFirst thread executing.");
+				for (int i = 0; i < 10000000; ++i) {
+					double j = i*i + i;
+					if (i%1000000 == 0)
+						System.out.println("Thread is still running: " + i);
+				}
 			}	
 		});
-
 		test1a.fork();
-
-		KThread test1b = new KThread(new Runnable(){
-			public void run(){
-				Lib.debug(KThreadTestChar, "Second thread executing");
-			}	
-		});
-
-		test1b.fork();
 		
 		Lib.debug(KThreadTestChar, "Joining Threads...");
+		System.out.println("Joining running thread test.");
 		test1a.join();
-		test1b.join();
-
-		//Third thread to verify status of joined threads
-		KThread test1c = new KThread(new Runnable(){
-			public void run(){
-				if(test1a.getStatus() == 4 && test1b.getStatus() == 4)//both threads have joined
-					Lib.debug(KThreadTestChar, "Test 1 Successful! Both threads joined successfully.\n");
-				else
-					Lib.debug(KThreadTestChar, "Test 1 failed.");
-			}	
-		});
-
-		test1c.fork();
-		test1c.join();
 
 
 		//****************Test Case 2******************************
 		
 		KThread test2a = new KThread();
 		KThread test2b = new KThread();
+		test2b.setName("test2b");
+		test2b.setTarget(new Runnable() {
+			public void run(){
+				for (int i = 0; i < 10000000; ++i) {
+					double j = i*i + i;
+					if (i%1000000 == 0)
+						System.out.println("Thread test2b is still running: " + i);
+				}
+			}	
+		});
 		test2a.setTarget(new Runnable(){
 			public void run(){
 				Lib.debug(KThreadTestChar, "Test Case 2: Join one thread that is currently running.\nThread executing.");
-				test2b.setTarget(new Runnable(){
-					public void run(){
-					}
-				});
-
 				Lib.debug(KThreadTestChar, "Thread executing within first thread.");
 				test2b.fork();
-				Lib.debug(KThreadTestChar, "Sub thread joining.");
-				test2b.join(true);
+				//Lib.debug(KThreadTestChar, "Sub thread joining.");
+				System.out.println("Sub thread joining");
+				test2b.join();
 
 				Lib.debug(KThreadTestChar, "Test Case 2 Successful! Threads joined successfully.\n");
 			}

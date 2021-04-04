@@ -99,7 +99,7 @@ public class ReactWater{
 
 		//Create class to test functionality and some threads
 		ReactWater motherNature = new ReactWater();
-		KThread h1, h2, h3, h4, h5, o1, o2, o3, o4, o5;
+		KThread h1, h2, h3, h4, h5, h6, o1, o2, o3, o4, o5;
 
 		//Test Case 1: 2h and 1o
 		Lib.debug(ReactTestChar, "TestCase1: Enough materials for 1 water molecule\nSuccessful if one water is made.");
@@ -276,12 +276,11 @@ public class ReactWater{
 		h3 = new KThread();
 		h4 = new KThread();
 		h5 = new KThread();
+		h6 = new KThread();
 
 		o1 = new KThread();
 		o2 = new KThread();
 		o3 = new KThread();
-		o4 = new KThread();
-		o5 = new KThread();
 
 		h1.setTarget(new Runnable() {
 			public void run(){
@@ -313,6 +312,11 @@ public class ReactWater{
 			}
 		});
 
+		h6.setTarget(new Runnable() {
+			public void run() {
+				motherNature.hReady();
+			}
+		});
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 		o1.setTarget(new Runnable() {
 			public void run(){
@@ -333,29 +337,16 @@ public class ReactWater{
 		});
 
 
-		o4.setTarget(new Runnable() {
-			public void run() {
-				motherNature.oReady();
-			}
-		});
-
-		o5.setTarget(new Runnable() {
-			public void run() {
-				motherNature.oReady();
-			}
-		});
-
 		o1.fork();
 		o2.fork();
 		o3.fork();
-		o4.fork();
-		o5.fork();
 
 		h1.fork();
 		h2.fork();
 		h3.fork();
 		h4.fork();
 		h5.fork();
+		h6.fork();
 
 		o1.join();
 		o2.join();
