@@ -276,42 +276,30 @@ public class KThread {
 	private void join(boolean debug) {
 
 		//Thread already finished, block join attempt
-		if(status == statusFinished)
+		if(status == statusFinished) {
 			Lib.debug(KThreadTestChar, "Cannot join. Thread already finished. " + toString());
-			
 		//Stop join on threads already joining
-		else if(currentThread.joiners.contains(this.id)){
+		} else if(currentThread.joiners.contains(this.id)) {
 			Lib.debug(KThreadTestChar, "Cannot join. Thread already joining. " + toString());
-		}
-		else{
-			//stop program from crashing when testing self join
-			if(debug && this == currentThread){
-				Lib.debug(KThreadTestChar, "Self join blocked.");
-			}else{
-			Lib.assertTrue(this != currentThread);
-			Lib.debug(dbgThread, "Joining to thread: " + toString());
+		//stop program from crashing when testing self join
+		} else if(this == currentThread) {
+				//Lib.debug(KThreadTestChar, "Self join blocked.");
+				System.out.println("Self Join blocked.");
+		} else {
+			//Lib.assertTrue(this != currentThread);
+			//Lib.debug(dbgThread, "Joining to thread: " + toString());
+			System.out.println("Joining thread to: " + toString());
 			
 			//save ids of threads that are joining
 			joiners.add(currentThread.id);
 			for(int i = 0; i < currentThread.joiners.size(); i++){
 				joiners.add(currentThread.joiners.get(i));
 			}
-			
 			boolean intStatus = Machine.interrupt().disable();
-
 			//for test 2, check if a thread is sleeping while another thread joins it
-			if(debug){
-				if(test2 != null){
-					if(test2.getStatus() == 3)
-						Lib.debug(KThreadTestChar, "Thread joined from is sleeping.");
-				}
-				else
-					test2 = currentThread;
-			}
 			waitQueue.waitForAccess(currentThread);
 			sleep();
 			Machine.interrupt().restore(intStatus);
-			}
 		}
 
 	}
@@ -446,6 +434,28 @@ public class KThread {
 	 * Tests whether this module is working.
 	 */
 	public static void selfTest() {
+
+		// Self Join test
+		KThread selfJoinThread = new KThread();
+		selfJoinThread.setName("SelfJoinThread");
+		System.out.println("Starting Self Join Test HP version");
+
+		selfJoinThread.setTarget(new Runnable() {
+			public void run() {
+				String result = "Self join test failed.";
+				try {
+					selfJoinThread.join();
+				}
+				catch (Error e) {
+					result = "Self join test, passed.";
+				}
+				System.out.println(result);
+			}
+		});
+		selfJoinThread.fork();
+		selfJoinThread.join();
+
+
 		Lib.debug(dbgThread, "Enter KThread.selfTest");
 		Lib.debug(KThreadTestChar, "*****************From KThread***************************");	
 		new KThread(new PingTest(1)).setName("forked thread").fork();
